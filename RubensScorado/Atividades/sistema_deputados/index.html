@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Consulta de Deputados - Câmara</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- Vue.js 3 CDN -->
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <!-- Axios para requisições HTTP -->
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+  <div id="app">
+    <header>
+      <h1>Portal Transparência - Deputados</h1>
+    </header>
+
+    <main class="container">
+      <!-- TELA 1: LISTAGEM E BUSCA -->
+      <section v-if="!deputadoSelecionado">
+        <div class="search-box">
+          <input 
+            type="text" 
+            v-model="termoBusca" 
+            @keyup.enter="buscarDeputados"
+            placeholder="Digite o nome do deputado..." 
+          />
+          <select v-model="ufFiltro" @change="buscarDeputados">
+            <option value="">Todas as UFs</option>
+            <option v-for="uf in ufs" :key="uf" :value="uf">{{ uf }}</option>
+          </select>
+          <button @click="buscarDeputados">Pesquisar</button>
+        </div>
+
+        <div v-if="loading" class="loading">Carregando deputados...</div>
+
+        <div v-else class="grid-cards">
+          <div 
+            class="card" 
+            v-for="dep in deputados" 
+            :key="dep.id" 
+            @click="verDetalhes(dep.id)"
+          >
+            <img :src="dep.urlFoto" :alt="dep.nome">
+            <h3>{{ dep.nome }}</h3>
+            <p class="badge">{{ dep.siglaPartido }} - {{ dep.siglaUf }}</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- TELA 2: DETALHES DO DEPUTADO -->
+      <section v-else class="detalhes-container">
+        <button class="btn-voltar" @click="voltarListagem">← Voltar para a Lista</button>
+        
+        <div v-if="loadingDetalhes" class="loading">Carregando detalhes...</div>
+
+        <div v-else class="detalhes-card">
+          <img :src="deputadoSelecionado.ultimoStatus.urlFoto" :alt="deputadoSelecionado.nomeCivil">
+          
+          <div class="info">
+            <h2>{{ deputadoSelecionado.nomeCivil }}</h2>
+            <p><strong>Partido / UF:</strong> {{ deputadoSelecionado.ultimoStatus.siglaPartido }} - {{ deputadoSelecionado.ultimoStatus.siglaUf }}</p>
+            <p><strong>E-mail:</strong> {{ deputadoSelecionado.ultimoStatus.gabinete.email || 'Não informado' }}</p>
+            <p><strong>Telefone Gabinete:</strong> (61) {{ deputadoSelecionado.ultimoStatus.gabinete.telefone || 'Não informado' }}</p>
+            <p><strong>Gabinete:</strong> Prédio {{ deputadoSelecionado.ultimoStatus.gabinete.predio }}, Sala {{ deputadoSelecionado.ultimoStatus.gabinete.sala }}</p>
+            
+            <hr style="margin: 15px 0;">
+            
+            <h3>Redes Sociais</h3>
+            <ul v-if="deputadoSelecionado.redeSocial && deputadoSelecionado.redeSocial.length">
+              <li v-for="(rede, i) in deputadoSelecionado.redeSocial" :key="i">
+                <a :href="rede" target="_blank">{{ rede }}</a>
+              </li>
+            </ul>
+            <p v-else>Nenhuma rede social registrada.</p>
+
+            <button class="btn-extra" @click="copiarEmail">Copiar E-mail de Contato</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
